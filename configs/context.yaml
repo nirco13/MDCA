@@ -1,0 +1,39 @@
+# Context-Aware Configuration
+# Uses item sequences + context
+
+experiment:
+  name: "mdca_context"
+  seed: 42
+  output_dir: "./output/context"
+
+model:
+  config: "context"
+  hidden_size: 64
+  max_seq_length: 50
+  num_attention_heads: 4
+  num_hidden_layers: 2
+  hidden_dropout_prob: 0.5
+  embed_reg: 1.0e-6  # Embedding L2 regularization weight
+
+# Context features
+context:
+  use_time: true
+  use_category: true
+  use_geospatial: true
+  use_weather: true
+
+# Training
+training:
+  batch_size: 256
+  learning_rate: 0.0001
+  num_epochs: 30
+  weight_decay: 0.0
+  device: "cpu"
+
+# Data
+data:
+#  dataset_path: "./data/contexttrails_pj_full_test.csv"
+  dataset_path: "./data/weeplaces_SF.csv"
+  train_split: 0.7
+  val_split: 0.1
+  test_split: 0.2
