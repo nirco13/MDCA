@@ -57,7 +57,7 @@ class ContextClusteringModule(nn.Module):
             dataloader: Training data loader
             model: The model instance (to extract embeddings)
         """
-        print("Initializing clustering")
+
         model.eval()
 
         # Collect context embeddings
@@ -101,7 +101,7 @@ class ContextClusteringModule(nn.Module):
         )
         self.cluster_centers.data = F.normalize(self.cluster_centers.data, p=2, dim=1)
 
-        print(f"✓ Initialized {self.num_clusters} clusters with FAISS")
+
         model.train()
 
     def get_cluster_assignment(
@@ -125,11 +125,6 @@ class ContextClusteringModule(nn.Module):
 
         # Hard assignment (argmin)
         hard_assignments = torch.argmin(distances, dim=-1)
-
-        # One-hot encoding
-        cluster_assignment_one_hot = F.one_hot(
-            hard_assignments, num_classes=self.num_clusters
-        ).float()
 
         # Get cluster embeddings (nearest cluster center for each sample)
         cluster_embedding = self.cluster_centers[hard_assignments]

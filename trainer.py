@@ -1,12 +1,10 @@
 import os
-import json
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 from tqdm import tqdm
-from datetime import datetime
-from utils import hit_rate_at_k, ndcg_k, map_at_k, mrr_at_k
+from utils import hit_rate_at_k, ndcg_k, mrr_at_k
 
 
 class FinalRepresentationLogger:
@@ -118,7 +116,7 @@ class ContextAwareTrainer:
                 # Save best model
                 best_model_path = os.path.join(self.args.output_dir, 'best_model.pt')
                 self.save_model(best_model_path)
-                print(f"✓ New best model saved! NDCG@10: {self.best_metric:.4f}")
+                print(f"New best model saved, NDCG@10: {self.best_metric:.4f}")
 
             # Print epoch summary with all k values
             print(f"\nEpoch {epoch + 1} Summary:")
@@ -199,15 +197,15 @@ class ContextAwareTrainer:
         # Extract context data
         context_data = self._extract_context_from_batch(batch)
         
-        # Get final representation from model (already computed, includes item + context + cluster)
+        # Get final representation from model
         outputs = self.model(input_ids, return_all_outputs=True, **context_data)
         final_user_repr = outputs['final_user_repr']  # [B, final_repr_size]
         final_user_repr = F.normalize(final_user_repr, p=2, dim=-1)
 
-        # Get candidate embeddings using raw item embeddings (without positional encoding)
+        # Get candidate embeddings using raw item embeddings
         candidate_item_emb = self.model.item_embedding.item_embedding(candidates)  # [B, num_candidates, hidden_size]
 
-        # Project to final_repr_size using learned projection (SAME AS EVALUATION)
+        # Project to final_repr_size using learned projection
         candidate_embeddings = self.model.item_projection(candidate_item_emb)  # [B, num_candidates, final_repr_size]
         candidate_embeddings = F.normalize(candidate_embeddings, p=2, dim=-1)
         
@@ -227,7 +225,7 @@ class ContextAwareTrainer:
         return bpr_loss
     
     def _compute_clustering_loss(self, batch):
-        """Compute clustering loss (only for context_clustering config)"""
+        """Compute clustering loss """
         if self.config != 'context_clustering':
             return torch.tensor(0.0, device=self.device)
         
@@ -246,7 +244,7 @@ class ContextAwareTrainer:
     def _extract_context_from_batch(self, batch):
         """Extract context data from batch"""
         context_data = {}
-        # Extract one-hot encoded features (new format)
+        # Extract one-hot encoded features
         context_keys = [
             'time_features',
             'category_features',
@@ -290,12 +288,12 @@ class ContextAwareTrainer:
                 candidates = batch['candidates']  # [B, num_candidates] - 1 positive + 99 negatives
                 context_data = self._extract_context_from_batch(batch)
                 
-                # Get final user representation (projected vector for similarity-based recommendation)
+                # Get final user representation
                 outputs = self.model(input_ids, return_all_outputs=True, **context_data)
                 final_user_repr = outputs['final_user_repr']  # [B, final_repr_size]
                 final_user_repr = F.normalize(final_user_repr, p=2, dim=-1)
 
-                # Score against candidate items using raw item embeddings (no positional encoding)
+                # Score against candidate items using raw item embeddings
                 candidate_item_emb = self.model.item_embedding.item_embedding(candidates)  # [B, num_candidates, hidden_size]
                 candidate_embeddings = self.model.item_projection(candidate_item_emb)  # [B, num_candidates, final_repr_size]
                 candidate_embeddings = F.normalize(candidate_embeddings, p=2, dim=-1)
@@ -306,7 +304,7 @@ class ContextAwareTrainer:
                     candidate_embeddings.transpose(1, 2)
                 ).squeeze(1)  # [B, num_candidates]
                 
-                # Get top-k predictions for each user (single-item evaluation)
+                # Get top-k predictions for each user
                 batch_size = candidate_scores.size(0)
                 for i in range(batch_size):
                     user_scores = candidate_scores[i]  # [num_candidates]
@@ -328,7 +326,6 @@ class ContextAwareTrainer:
             if len(all_predictions) > 0 and k <= len(all_predictions[0]):  # Check if k is valid
                 metrics[f'Hit@{k}'] = hit_rate_at_k(all_actual, all_predictions, k)
                 metrics[f'NDCG@{k}'] = ndcg_k(all_actual, all_predictions, k)
-                metrics[f'MAP@{k}'] = map_at_k(all_actual, all_predictions, k)
                 metrics[f'MRR@{k}'] = mrr_at_k(all_actual, all_predictions, k)
         
         return metrics
@@ -358,8 +355,7 @@ class ContextAwareTrainer:
             model_args=vars(self.args)
         )
         
-        print("Saving final model representations...")
-        
+
         # Save validation representations
         if save_validation and hasattr(self, 'eval_dataloader'):
             try:

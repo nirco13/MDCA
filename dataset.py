@@ -34,18 +34,9 @@ class ContextAwareDataset(Dataset):
         self.num_negatives = getattr(args, 'num_negatives', 99)
 
         # Create a separate Random instance for deterministic candidate generation
-        # This avoids manipulating global random state
         self._candidate_rng = random.Random()
 
-        print(f"Dataset created for {data_type} with config: {self.config}")
-        if self.use_context:
-            enabled_features = []
-            if hasattr(args, 'use_time') and args.use_time:
-                enabled_features.append('time')
-            if hasattr(args, 'use_category') and args.use_category:
-                enabled_features.append('category')
-            if hasattr(args, 'use_geospatial') and args.use_geospatial:
-                enabled_features.append('geospatial')
+
 
     def __len__(self):
         return len(self.user_seq)
@@ -237,7 +228,6 @@ class ContextAwareDataset(Dataset):
         seed = hash((user_id, target_item, self.data_type)) % (2**31)
         
         # Use separate Random instance with deterministic seed for candidate generation
-        # This avoids manipulating global random state
         self._candidate_rng.seed(seed)
 
         # Get all user's historical items to exclude from negatives

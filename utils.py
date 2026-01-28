@@ -1,10 +1,8 @@
 import os
 import math
-import json
 import torch
 import random
 import numpy as np
-import pandas as pd
 from typing import List, Tuple
 
 
@@ -23,7 +21,7 @@ def check_path(path):
     """Create path if it doesn't exist"""
     if not os.path.exists(path):
         os.makedirs(path)
-        print(f"{path} created")
+
 
 
 def get_percentage_split_indices(seq_length, train_pct=0.7, valid_pct=0.1, test_pct=0.2):
@@ -74,7 +72,7 @@ def hit_rate_at_k(actual, predicted, topk):
     for i in range(num_users):
         act_set = set(actual[i])
         pred_set = set(predicted[i][:topk])
-        # Hit if there's any intersection between actual and top-k predicted
+
         if len(act_set & pred_set) > 0:
             hits += 1
     
@@ -99,75 +97,6 @@ def idcg_k(k):
         return 1.0
     else:
         return res
-
-
-def map_at_k(actual, predicted, topk):
-    """
-    Calculate Mean Average Precision at k
-    
-    MAP@k measures the quality of ranked recommendations by considering both
-    relevance and ranking position. It computes the average precision for each
-    user and then averages across all users.
-    
-    Args:
-        actual: list of lists, where actual[i] contains relevant items for user i
-        predicted: list of lists, where predicted[i] contains predicted items for user i (ranked by score)
-        topk: cutoff rank position
-    
-    Returns:
-        float: MAP@k score (0.0 to 1.0, higher is better)
-        
-    Example:
-        actual = [[1, 2, 3], [4, 5]]
-        predicted = [[1, 6, 2, 7, 3], [4, 8, 5, 9, 10]]
-        map_at_k(actual, predicted, 5) = (AP_user1 + AP_user2) / 2
-        
-        For user 1: relevant items [1,2,3] in predicted [1,6,2,7,3]
-        - Item 1 at pos 1: P@1 = 1/1 = 1.0
-        - Item 2 at pos 3: P@3 = 2/3 = 0.667
-        - Item 3 at pos 5: P@5 = 3/5 = 0.6
-        AP@5 = (1.0 + 0.667 + 0.6) / 3 = 0.756
-    """
-    def average_precision_at_k(actual_items, predicted_items, k):
-        """Calculate Average Precision at k for a single user"""
-        if not actual_items:
-            return 0.0
-        
-        # Only consider top-k predictions
-        predicted_items = predicted_items[:k]
-        
-        # Convert actual items to set for faster lookup
-        actual_set = set(actual_items)
-        
-        score = 0.0
-        num_hits = 0.0
-        
-        # Calculate precision at each relevant position
-        for i, item in enumerate(predicted_items):
-            if item in actual_set:
-                num_hits += 1.0
-                precision_at_i = num_hits / (i + 1.0)
-                score += precision_at_i
-        
-        # Normalize by minimum of (number of relevant items, k)
-        # This ensures we don't penalize users with few relevant items
-        normalization_factor = min(len(actual_items), k)
-        return score / normalization_factor if normalization_factor > 0 else 0.0
-    
-    # Calculate AP@k for each user
-    ap_scores = []
-    num_users = len(actual)
-    
-    for i in range(num_users):
-        if i < len(predicted):
-            ap = average_precision_at_k(actual[i], predicted[i], topk)
-            ap_scores.append(ap)
-        else:
-            # Handle case where user has no predictions
-            ap_scores.append(0.0)
-    
-    # Return mean of all AP scores
-    return sum(ap_scores) / len(ap_scores) if ap_scores else 0.0
 
 
 def mrr_at_k(actual_items, predicted_items, k):

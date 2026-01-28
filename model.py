@@ -155,7 +155,7 @@ class MDCASimple(MDCABase):
     def __init__(self, args):
         super().__init__(args)
 
-        # Final representation size (always matches hidden_size)
+        # Final representation size
         self.final_repr_size = self.hidden_size
 
         # Output layers
@@ -193,7 +193,7 @@ class MDCASimple(MDCABase):
         # Encode with transformer
         encoded_items = self.item_transformer(item_embeddings, mask=mask)
 
-        # Get final representation (last position)
+        # Get final representation
         item_repr = encoded_items[:, -1, :]
         final_user_repr = self.output_layer(item_repr)
 
@@ -220,7 +220,7 @@ class MDCAContext(MDCABase):
         # Initialize shared context-aware components
         self._init_context_aware_components()
 
-        # Final representation size (always matches hidden_size)
+        # Final representation size
         self.final_repr_size = self.hidden_size
 
         # Output layers (item + context)
@@ -279,7 +279,7 @@ class MDCAContext(MDCABase):
         )
 
         if context_repr is None:
-            # No context available - fallback to POI-only
+            # If no context available - fallback to POI-only
             item_repr = encoded_items[:, -1, :]
             final_user_repr = self.output_layer(
                 torch.cat([item_repr, torch.zeros_like(item_repr)], dim=-1)

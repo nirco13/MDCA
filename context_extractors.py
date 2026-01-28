@@ -85,8 +85,8 @@ class ContextExtractor:
         Args:
             user_seq: User sequence dictionary with one-hot column values
             seq_len: Length of sequence to extract
-            feature_columns: Dictionary mapping feature types to column names (required for one-hot mode)
-            target_index: Optional target index for evaluation (not used currently)
+            feature_columns: Dictionary mapping feature types to column names
+            target_index: Optional target index for evaluation
 
         Returns:
             context_data: Dictionary of tensors, e.g.:
@@ -110,7 +110,7 @@ class ContextExtractor:
             if category_features is not None:
                 context_data['category_features'] = category_features
 
-        # Extract geospatial features (SCALED to [0, 1])
+        # Extract geospatial features (scaled to [0, 1])
         if self.use_geospatial:
             if 'lat' in user_seq and 'lon' in user_seq:
                 lats = user_seq['lat'][:seq_len]
@@ -229,7 +229,6 @@ class ContextExtractor:
         place_counts = df['placeid'].value_counts()
         valid_places = place_counts[place_counts >= min_interactions].index
         df = df[df['placeid'].isin(valid_places)]
-        print(f"After filtering places (>={min_interactions} interactions): {len(df)} interactions, {df['placeid'].nunique()} places")
 
         # Step 2.6: Filter users with minimum interactions
         user_counts = df['userid'].value_counts()
@@ -277,12 +276,6 @@ class ContextExtractor:
         for user_seq in user_seq_list:
             all_items.update(user_seq['items'])
         max_item_id = max(all_items) if all_items else 0
-
-        print(f"Final dataset: {len(user_seq_list)} users")
-        print(f"Max item ID: {max_item_id}")
-        print(f"Feature groups: {list(feature_columns.keys())}")
-        for feature_type, columns in feature_columns.items():
-            print(f"  {feature_type}: {len(columns)} columns")
 
         return user_seq_list, max_item_id, feature_columns
 
@@ -463,9 +456,6 @@ class ContextExtractor:
         else:
             df['lon_scaled'] = (df['lon'] - self.lon_min) / (self.lon_max - self.lon_min)
 
-        print(f"Geospatial normalization:")
-        print(f"  Latitude: [{self.lat_min:.4f}, {self.lat_max:.4f}] → [0, 1]")
-        print(f"  Longitude: [{self.lon_min:.4f}, {self.lon_max:.4f}] → [0, 1]")
 
         return df
 

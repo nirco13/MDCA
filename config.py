@@ -62,4 +62,4 @@ def save_config(args: Namespace, save_path: str):
     with open(save_path, 'w') as f:
         yaml.dump(serializable_dict, f, default_flow_style=False, sort_keys=False)
 
-    print(f"✓ Configuration saved to {save_path}")
+    print(f"Configuration saved to {save_path}")

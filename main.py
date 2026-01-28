@@ -5,7 +5,7 @@ Uses YAML configuration files for reproducible experiments.
 """
 
 import os
-# Fix OpenMP conflict with FAISS
+
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 import torch
